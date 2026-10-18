@@ -271,6 +271,7 @@
 .content-area {
   padding: 28px;
   flex: 1;
+  min-width: 0;
 }
 
 .page-section {
@@ -284,6 +285,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .page-header h3 {
@@ -308,6 +310,12 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(180px, 1fr));
   gap: 16px;
+}
+
+.stats-grid > *,
+.chart-grid > *,
+.grade-summary-row > * {
+  min-width: 0;
 }
 
 .stat-card {
@@ -403,6 +411,7 @@
 
 .table-wrapper {
   overflow-x: auto;
+  max-width: 100%;
   background: rgba(15, 23, 42, 0.75);
   border-radius: 16px;
   border: 1px solid var(--line);
@@ -411,6 +420,7 @@
 .data-table,
 .mini-table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
 }
 
@@ -546,6 +556,7 @@ button.danger {
   place-items: center;
   z-index: 1000;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .modal {
@@ -587,6 +598,7 @@ button.danger {
 .form-grid {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .field {
@@ -1408,13 +1420,32 @@ button.danger {
   100% { background-position: -200% 0; }
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1024px) {
   .app-shell {
     flex-direction: column;
   }
 
   .sidebar {
     width: 100%;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    padding: 14px 20px;
+  }
+
+  .topbar-left {
+    flex: 1 1 auto;
+  }
+
+  .search-shell {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .logout-button {
+    order: 2;
   }
 
   .chart-grid,
@@ -1434,7 +1465,7 @@ button.danger {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1024px) {
   .app-shell {
     display: flex;
     flex-direction: column;
@@ -1503,27 +1534,6 @@ button.danger {
     min-width: 0;
   }
 
-  .topbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 12px 14px;
-  }
-
-  .topbar-left {
-    flex: 1 1 auto;
-  }
-
-  .search-shell {
-    order: 3;
-    flex: 1 1 100%;
-    max-width: none;
-  }
-
-  .logout-button {
-    order: 2;
-  }
-
   .content-area {
     width: 100%;
     min-width: 0;
@@ -1536,12 +1546,13 @@ button.danger {
     align-items: stretch;
   }
 
-  .auth-panel {
-    padding: 24px;
+  .page-header > *,
+  .modal-actions > * {
+    width: 100%;
   }
 
-  .topbar {
-    flex-wrap: wrap;
+  .auth-panel {
+    padding: 24px;
   }
 
   .question-actions,
@@ -1580,6 +1591,15 @@ button.danger {
     padding: 14px;
   }
 
+  .modal-header {
+    gap: 10px;
+  }
+
+  .modal-header h3 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
   .data-table th,
   .data-table td,
   .mini-table th,
@@ -1601,4 +1621,3 @@ button.danger {
     padding: 24px 18px;
   }
 }
-

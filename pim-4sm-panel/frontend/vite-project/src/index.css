@@ -44,6 +44,7 @@ body,
 body {
   min-height: 100vh;
   color: var(--text-primary);
+  overflow-x: hidden;
 }
 
 button,
@@ -63,4 +64,3 @@ h4,
 p {
   margin: 0;
 }
-

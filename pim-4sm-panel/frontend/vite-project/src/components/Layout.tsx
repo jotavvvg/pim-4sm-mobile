@@ -42,7 +42,7 @@ const entityLabels: Record<string, string> = {
   turmas: 'Turmas',
 };
 
-const mobileViewportQuery = '(max-width: 640px)';
+const mobileViewportQuery = '(max-width: 1024px)';
 
 function subscribeToMobileViewport(onChange: () => void) {
   const mediaQuery = window.matchMedia(mobileViewportQuery);
