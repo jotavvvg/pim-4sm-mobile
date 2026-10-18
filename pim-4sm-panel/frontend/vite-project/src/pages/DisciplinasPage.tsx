@@ -5,7 +5,7 @@ import { ActionButton } from '@/components/ActionButton';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { FormField } from '@/components/FormField';
 import { Modal } from '@/components/Modal';
-import { createDisciplina, deleteDisciplina, fetchDisciplinas, updateDisciplina } from '@/lib/api';
+import { createDisciplina, deleteDisciplina, fetchDisciplinas, getApiErrorMessage, updateDisciplina } from '@/lib/api';
 import type { Disciplina } from '@/types/entities';
 
 const emptyForm = { nome: '', carga_hora: 0 };
@@ -68,7 +68,12 @@ export function DisciplinasPage() {
       return;
     }
 
-    await deleteDisciplina(id);
+    try {
+      await deleteDisciplina(id);
+    } catch (error) {
+      window.alert(getApiErrorMessage(error, 'Não foi possível excluir a disciplina. Tente novamente.'));
+      return;
+    }
     await loadItems();
   };
 

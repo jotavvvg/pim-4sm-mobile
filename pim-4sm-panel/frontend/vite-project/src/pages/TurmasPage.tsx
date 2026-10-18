@@ -11,6 +11,7 @@ import {
   fetchAlunoById,
   fetchTurmaById,
   fetchTurmas,
+  getApiErrorMessage,
   updateTurma,
 } from '@/lib/api';
 import type { Aluno, Turma } from '@/types/entities';
@@ -71,7 +72,12 @@ export function TurmasPage() {
       return;
     }
 
-    await deleteTurma(id);
+    try {
+      await deleteTurma(id);
+    } catch (error) {
+      window.alert(getApiErrorMessage(error, 'Não foi possível excluir a turma.'));
+      return;
+    }
     await loadItems();
   };
 

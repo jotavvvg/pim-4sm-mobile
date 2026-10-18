@@ -4,6 +4,8 @@ Sistema colaborativo acadêmico desenvolvido para o **PIM — Projeto Integrado 
 
 O projeto reúne uma versão web responsiva e uma versão mobile em Expo para apoiar o gerenciamento acadêmico de disciplinas, turmas, professores, alunos, atividades e avaliações.
 
+Os comandos deste documento partem da raiz do repositório, que contém a pasta `pim-4sm-panel`.
+
 ## Início rápido
 
 ### Pré-requisitos
@@ -18,23 +20,23 @@ O projeto reúne uma versão web responsiva e uma versão mobile em Expo para ap
 Em terminais separados:
 
 ```powershell
-cd backend
+cd pim-4sm-panel\backend
 npm install
 ```
 
 ```powershell
-cd frontend\vite-project
+cd pim-4sm-panel\frontend\vite-project
 npm install
 ```
 
 ```powershell
-cd mobile
+cd pim-4sm-panel\mobile
 npm install
 ```
 
 ### 2. Configurar o backend web
 
-Crie `backend\.env` com as variáveis necessárias:
+Crie `pim-4sm-panel\backend\.env` com as variáveis necessárias:
 
 ```env
 DATABASE_URL=mysql://usuario:senha@localhost:3306/academico_db
@@ -47,7 +49,7 @@ O `DATABASE_URL` é usado pela versão web conectada ao MySQL. O `JWT_SECRET` de
 ### 3. Executar o backend
 
 ```powershell
-cd backend
+cd pim-4sm-panel\backend
 npm run dev
 ```
 
@@ -58,7 +60,7 @@ A API ficará disponível em `http://localhost:3000`.
 Em outro terminal:
 
 ```powershell
-cd frontend\vite-project
+cd pim-4sm-panel\frontend\vite-project
 npm run dev
 ```
 
@@ -67,7 +69,7 @@ O Vite exibirá o endereço local, normalmente `http://localhost:5173`.
 ### 5. Executar o app Expo
 
 ```powershell
-cd mobile
+cd pim-4sm-panel\mobile
 npx expo start
 ```
 
@@ -79,6 +81,157 @@ npx expo start -c
 
 O app mobile atual usa SQLite local e dados de demonstração. Portanto, o backend não é necessário para executar o fluxo offline inicial do mobile.
 
+## Criar o aplicativo mobile
+
+O projeto Expo pode ser executado de três formas: no Expo Go durante o desenvolvimento, como um APK de teste para instalação direta ou como um pacote de publicação para a Google Play Store.
+
+### Desenvolvimento com Expo Go
+
+O Expo Go é somente um cliente de desenvolvimento e precisa ser compatível com o SDK do projeto. O mobile está configurado atualmente para **Expo SDK 57**.
+
+```powershell
+cd pim-4sm-panel\mobile
+npx expo start -c
+```
+
+Essa opção exige que o Expo Go usado no aparelho suporte SDK 57. Ela é útil para desenvolvimento local, mas não é a opção ideal para entregar o aplicativo a outras pessoas.
+
+### Inspeção no navegador
+
+Também é possível executar a versão Expo no navegador, sem gerar APK:
+
+```powershell
+cd pim-4sm-panel\mobile
+npx expo start --web
+```
+
+Esse modo permite conferir rapidamente layout, textos, ícones, charts, modais e fluxos antes de gerar um aplicativo. O projeto inclui a configuração Metro necessária para o SQLite WebAssembly usado pelo `expo-sqlite` no SDK 57. Use uma única aba do projeto durante a inspeção, pois o SQLite WebAssembly pode bloquear o arquivo local quando várias abas tentam abrir o mesmo banco simultaneamente.
+
+### APK de teste
+
+O APK de teste é o formato recomendado para avaliação acadêmica. Ele contém o runtime Expo e os módulos nativos do projeto, portanto o testador não precisa instalar o repositório, Node.js, Expo CLI ou Expo Go.
+
+#### Pré-requisitos do desenvolvedor
+
+- uma conta Expo;
+- acesso à internet;
+- EAS CLI executado via `npx`;
+- um identificador Android exclusivo para o aplicativo.
+
+Configure o EAS uma vez:
+
+```powershell
+cd pim-4sm-panel\mobile
+npx eas-cli login
+npx eas-cli build:configure
+```
+
+Confirme no `app.json` um identificador exclusivo:
+
+```json
+{
+  "expo": {
+    "android": {
+      "package": "com.exemplo.siscol"
+    }
+  }
+}
+```
+
+Altere o valor de exemplo se ele já estiver sendo usado por outro aplicativo. O identificador deve permanecer estável depois da primeira distribuição.
+
+Gere o APK:
+
+```powershell
+cd pim-4sm-panel\mobile
+npx eas-cli build --platform android --profile preview
+```
+
+O EAS compila o aplicativo na nuvem e fornece um link para o artefato. O testador baixa o `.apk`, permite a instalação de fonte externa quando solicitado pelo Android, instala e abre o Siscol. Não são necessários comandos, cabo USB, computador ou ferramentas de desenvolvimento no aparelho.
+
+O APK inicializa o SQLite local e os dados demo no primeiro lançamento. O fluxo mobile atual não depende do backend para essa demonstração offline.
+
+### Development Build
+
+Um development build é um aplicativo próprio do projeto para desenvolvimento contínuo. Ele é diferente do Expo Go porque contém o runtime e os módulos nativos definidos pelo Siscol.
+
+```powershell
+cd pim-4sm-panel\mobile
+npx expo install expo-dev-client
+npx eas-cli build:configure
+npx eas-cli build --platform android --profile development
+```
+
+Depois de instalar o APK no aparelho, inicie o Metro:
+
+```powershell
+cd pim-4sm-panel\mobile
+npx expo start --dev-client
+```
+
+Esse modo normalmente exige que o aparelho e o computador estejam na mesma rede. Use-o para desenvolvimento compartilhado; para uma entrega acadêmica simples, prefira o APK `preview`.
+
+### Publicação na Google Play Store
+
+A publicação exige uma conta Google Play Console, identificação exclusiva do aplicativo e assinatura Android. Para gerar o pacote da loja:
+
+```powershell
+cd pim-4sm-panel\mobile
+npx eas-cli build --platform android --profile production
+```
+
+O perfil de produção gera um Android App Bundle (`.aab`), usado pela Play Store. O EAS pode gerenciar a chave de assinatura mediante confirmação, mas essa chave deve ser preservada com segurança e nunca ser commitada no repositório.
+
+Um certificado de publicação não é necessário para gerar um APK `preview` para instalação manual. A exigência de assinatura de publicação, Play Console e gerenciamento de chave se aplica ao fluxo da loja.
+
+### Perfis e auditoria do build
+
+O `eas.json` controla os perfis de build. Uma configuração comum é:
+
+```json
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {}
+  }
+}
+```
+
+O processo auditável é:
+
+```text
+Código TypeScript/React Native
+        ↓
+app.json + package.json + package-lock.json
+        ↓
+eas.json e perfil escolhido
+        ↓
+EAS Build
+        ↓
+APK de teste ou AAB de publicação
+```
+
+Antes de gerar o artefato, valide o projeto:
+
+```powershell
+cd pim-4sm-panel\mobile
+npm ci
+npx tsc --noEmit
+npx expo-doctor
+npx expo config --type public
+```
+
+O repositório deve registrar alterações em `package.json`, `package-lock.json`, `app.json` e `eas.json`. Não devem ser commitados arquivos `.env`, tokens, credenciais ou chaves de assinatura.
+
 ## Contas de demonstração mobile
 
 O banco local é criado e populado automaticamente no primeiro lançamento do app.
@@ -89,22 +242,27 @@ O banco local é criado e populado automaticamente no primeiro lançamento do ap
 | Professor | `prof.ana.silva` | `Professor123!` |
 | Professor | `prof.carlos.rocha` | `Professor123!` |
 | Professor | `prof.bruna.costa` | `Professor123!` |
-| Aluno | `aluno.joao` | `Aluno123!` |
-| Aluna | `aluna.maria` | `Aluno123!` |
+| Aluna | `maria.souza` | `Aluno123!` |
+| Aluno | `joao.pereira` | `Aluno123!` |
+| Aluna | `lucia.almeida` | `Aluno123!` |
+| Aluno | `pedro.martins` | `Aluno123!` |
+| Aluna | `fernanda.costa` | `Aluno123!` |
+
+O seed replica os dados demo do Electron: cinco alunos distribuídos nas turmas A e B, vínculos com disciplinas, as atividades `Revisão de Matemática` e `Primeiros passos com algoritmos`, questões de múltipla escolha e dissertativas e uma entrega pendente de João Pereira para o fluxo de correção. Para que os dashboards e charts sejam auditáveis logo no primeiro lançamento, há entregas concluídas com notas variadas em Matemática, Programação e História, incluindo Maria Souza, Pedro Martins e Fernanda Costa. A nota da entrega pendente permanece vazia até a correção da questão dissertativa.
 
 ## Testes e validação
 
 ### Backend
 
 ```powershell
-cd backend
+cd pim-4sm-panel\backend
 npm run build
 ```
 
 ### Frontend web
 
 ```powershell
-cd frontend\vite-project
+cd pim-4sm-panel\frontend\vite-project
 npm run build
 npm run lint
 ```
@@ -112,7 +270,7 @@ npm run lint
 ### Mobile
 
 ```powershell
-cd mobile
+cd pim-4sm-panel\mobile
 npx tsc --noEmit
 npx expo-doctor
 npx expo config --type public
@@ -480,7 +638,7 @@ Expo SDK 57
 Para iniciar com Expo Go:
 
 ```powershell
-cd mobile
+cd pim-4sm-panel\mobile
 npx expo start -c
 ```
 
@@ -493,7 +651,7 @@ O backend web usa MySQL e precisa de um banco configurado para executar todos os
 As migrações estão em `backend/drizzle/`. Os scripts disponíveis incluem:
 
 ```powershell
-cd backend
+cd pim-4sm-panel\backend
 npm run db:generate
 npm run db:push
 npm run db:seed

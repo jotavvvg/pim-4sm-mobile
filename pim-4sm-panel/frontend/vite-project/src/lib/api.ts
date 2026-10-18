@@ -21,6 +21,13 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
 });
 
+export function getApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message ?? fallback;
+  }
+  return error instanceof Error ? error.message : fallback;
+}
+
 api.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('bestauth_token');
   if (token) {

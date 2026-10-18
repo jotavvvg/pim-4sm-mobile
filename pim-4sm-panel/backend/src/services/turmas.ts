@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { alunos, turmas } from '../db/schema.js';
 
@@ -36,7 +36,19 @@ export const turmasService = {
   },
 
   async remove(id: number) {
+    const item = await this.findById(id);
+    if (!item) return { removed: false as const };
+
+    const [studentsResult] = await db.select({ count: count() }).from(alunos).where(eq(alunos.turmaId, id));
+    if (studentsResult.count > 0) {
+      const noun = studentsResult.count === 1 ? 'aluno' : 'alunos';
+      return {
+        removed: false as const,
+        reason: `Não é possível excluir a turma porque ela ainda possui ${studentsResult.count} ${noun} vinculado${studentsResult.count === 1 ? '' : 's'}. Remova ou reassocie esses alunos primeiro.`,
+      };
+    }
+
     const [result] = await db.delete(turmas).where(eq(turmas.id, id));
-    return (result.affectedRows ?? 0) > 0;
+    return { removed: (result.affectedRows ?? 0) > 0 } as const;
   },
 };

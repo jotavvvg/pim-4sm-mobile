@@ -177,8 +177,11 @@ app.put('/api/disciplinas/:id', {
 
 app.delete('/api/disciplinas/:id', async (request, reply) => {
   const { id } = request.params as { id: string };
-  const removed = await disciplinasService.remove(Number(id));
-  if (!removed) return reply.code(404).send({ message: 'Disciplina not found' });
+  const result = await disciplinasService.remove(Number(id));
+  if (!result.removed) {
+    if (result.reason) return reply.code(409).send({ message: result.reason });
+    return reply.code(404).send({ message: 'Disciplina not found' });
+  }
   return reply.code(204).send();
 });
 
@@ -210,8 +213,11 @@ app.put('/api/turmas/:id', {
 
 app.delete('/api/turmas/:id', async (request, reply) => {
   const { id } = request.params as { id: string };
-  const removed = await turmasService.remove(Number(id));
-  if (!removed) return reply.code(404).send({ message: 'Turma not found' });
+  const result = await turmasService.remove(Number(id));
+  if (!result.removed) {
+    if (result.reason) return reply.code(409).send({ message: result.reason });
+    return reply.code(404).send({ message: 'Turma not found' });
+  }
   return reply.code(204).send();
 });
 

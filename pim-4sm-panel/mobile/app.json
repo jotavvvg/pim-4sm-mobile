@@ -16,6 +16,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "package": "com.siscol.pim",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -25,6 +26,11 @@
       "expo-secure-store",
       "expo-status-bar",
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3e677c7a-cf01-46a7-82f6-9bc7d75826e0"
+      }
+    }
   }
 }
