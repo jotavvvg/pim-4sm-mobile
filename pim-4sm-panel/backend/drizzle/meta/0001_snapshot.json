@@ -1,0 +1,705 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "id": "0a354589-e82a-45ab-9029-ae8deb744a1e",
+  "prevId": "d76cb518-6070-4e4b-be27-4e0992982e58",
+  "tables": {
+    "aluno_disciplina": {
+      "name": "aluno_disciplina",
+      "columns": {
+        "aluno_id": {
+          "name": "aluno_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "disciplina_id": {
+          "name": "disciplina_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "aluno_disciplina_pair_unique": {
+          "name": "aluno_disciplina_pair_unique",
+          "columns": [
+            "aluno_id",
+            "disciplina_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "aluno_disciplina_aluno_id_aluno_id_fk": {
+          "name": "aluno_disciplina_aluno_id_aluno_id_fk",
+          "tableFrom": "aluno_disciplina",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "aluno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aluno_disciplina_disciplina_id_disciplina_id_fk": {
+          "name": "aluno_disciplina_disciplina_id_disciplina_id_fk",
+          "tableFrom": "aluno_disciplina",
+          "tableTo": "disciplina",
+          "columnsFrom": [
+            "disciplina_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "aluno": {
+      "name": "aluno",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "matriculado": {
+          "name": "matriculado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "turma_id": {
+          "name": "turma_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "aluno_usuario_unique": {
+          "name": "aluno_usuario_unique",
+          "columns": [
+            "usuario_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "aluno_turma_id_turma_id_fk": {
+          "name": "aluno_turma_id_turma_id_fk",
+          "tableFrom": "aluno",
+          "tableTo": "turma",
+          "columnsFrom": [
+            "turma_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aluno_usuario_id_usuarios_id_fk": {
+          "name": "aluno_usuario_id_usuarios_id_fk",
+          "tableFrom": "aluno",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "aluno_id": {
+          "name": "aluno_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "atividades": {
+      "name": "atividades",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "disciplina_id": {
+          "name": "disciplina_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "atividades_disciplina_id_idx": {
+          "name": "atividades_disciplina_id_idx",
+          "columns": [
+            "disciplina_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "atividades_disciplina_id_disciplina_id_fk": {
+          "name": "atividades_disciplina_id_disciplina_id_fk",
+          "tableFrom": "atividades",
+          "tableTo": "disciplina",
+          "columnsFrom": [
+            "disciplina_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "atividades_id": {
+          "name": "atividades_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "disciplina": {
+      "name": "disciplina",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "carga_hora": {
+          "name": "carga_hora",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "disciplina_id": {
+          "name": "disciplina_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "professor": {
+      "name": "professor",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "disciplina_id": {
+          "name": "disciplina_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "professor_usuario_unique": {
+          "name": "professor_usuario_unique",
+          "columns": [
+            "usuario_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "professor_disciplina_id_disciplina_id_fk": {
+          "name": "professor_disciplina_id_disciplina_id_fk",
+          "tableFrom": "professor",
+          "tableTo": "disciplina",
+          "columnsFrom": [
+            "disciplina_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "professor_usuario_id_usuarios_id_fk": {
+          "name": "professor_usuario_id_usuarios_id_fk",
+          "tableFrom": "professor",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "professor_id": {
+          "name": "professor_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "questoes": {
+      "name": "questoes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "atividade_id": {
+          "name": "atividade_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "enum('MULTIPLACADA','DISSERTATIVA')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "enunciado": {
+          "name": "enunciado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "opcoes": {
+          "name": "opcoes",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resposta_correta": {
+          "name": "resposta_correta",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "questoes_atividade_id_idx": {
+          "name": "questoes_atividade_id_idx",
+          "columns": [
+            "atividade_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "questoes_atividade_id_atividades_id_fk": {
+          "name": "questoes_atividade_id_atividades_id_fk",
+          "tableFrom": "questoes",
+          "tableTo": "atividades",
+          "columnsFrom": [
+            "atividade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "questoes_id": {
+          "name": "questoes_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "respostas_questoes": {
+      "name": "respostas_questoes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "submissao_id": {
+          "name": "submissao_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questao_id": {
+          "name": "questao_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resposta_dada": {
+          "name": "resposta_dada",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "correta": {
+          "name": "correta",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "respostas_questoes_submissao_id_idx": {
+          "name": "respostas_questoes_submissao_id_idx",
+          "columns": [
+            "submissao_id"
+          ],
+          "isUnique": false
+        },
+        "respostas_questoes_questao_id_idx": {
+          "name": "respostas_questoes_questao_id_idx",
+          "columns": [
+            "questao_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "respostas_questoes_submissao_id_submissoes_alunos_id_fk": {
+          "name": "respostas_questoes_submissao_id_submissoes_alunos_id_fk",
+          "tableFrom": "respostas_questoes",
+          "tableTo": "submissoes_alunos",
+          "columnsFrom": [
+            "submissao_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "respostas_questoes_questao_id_questoes_id_fk": {
+          "name": "respostas_questoes_questao_id_questoes_id_fk",
+          "tableFrom": "respostas_questoes",
+          "tableTo": "questoes",
+          "columnsFrom": [
+            "questao_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "respostas_questoes_id": {
+          "name": "respostas_questoes_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "submissoes_alunos": {
+      "name": "submissoes_alunos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "aluno_id": {
+          "name": "aluno_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "atividade_id": {
+          "name": "atividade_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status_correcao": {
+          "name": "status_correcao",
+          "type": "enum('CONCLUIDO','PENDENTE')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'PENDENTE'"
+        },
+        "nota_total": {
+          "name": "nota_total",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "submissoes_alunos_aluno_id_idx": {
+          "name": "submissoes_alunos_aluno_id_idx",
+          "columns": [
+            "aluno_id"
+          ],
+          "isUnique": false
+        },
+        "submissoes_alunos_atividade_id_idx": {
+          "name": "submissoes_alunos_atividade_id_idx",
+          "columns": [
+            "atividade_id"
+          ],
+          "isUnique": false
+        },
+        "submissoes_alunos_status_correcao_idx": {
+          "name": "submissoes_alunos_status_correcao_idx",
+          "columns": [
+            "status_correcao"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "submissoes_alunos_aluno_id_aluno_id_fk": {
+          "name": "submissoes_alunos_aluno_id_aluno_id_fk",
+          "tableFrom": "submissoes_alunos",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "aluno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "submissoes_alunos_atividade_id_atividades_id_fk": {
+          "name": "submissoes_alunos_atividade_id_atividades_id_fk",
+          "tableFrom": "submissoes_alunos",
+          "tableTo": "atividades",
+          "columnsFrom": [
+            "atividade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "submissoes_alunos_id": {
+          "name": "submissoes_alunos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "turma": {
+      "name": "turma",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(1)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "turma_id": {
+          "name": "turma_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "usuarios": {
+      "name": "usuarios",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "enum('ADMIN','PROFESSOR','ALUNO')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "usuarios_username_unique": {
+          "name": "usuarios_username_unique",
+          "columns": [
+            "username"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "usuarios_id": {
+          "name": "usuarios_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
+  }
+}
