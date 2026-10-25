@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { authenticate, getHomeData, type Discipline, type HomeData, type LocalSession } from './db';
 
 const SESSION_KEY = 'pim_local_session';
-const DEFAULT_BASE_URL = 'http://192.168.0.10:3000/api';
+const DEFAULT_BASE_URL = 'http://192.168.1.2:3000/api';
 
 export const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, '');
 
@@ -46,8 +46,19 @@ async function responseError(response: Response, fallback: string) {
   return body;
 }
 
+async function fetchRemote(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    const detail = error instanceof Error ? ` (${error.message})` : '';
+    throw new Error(
+      `Não foi possível conectar à API em ${BASE_URL}. Confira se o celular está na mesma rede Wi-Fi, se esse é o IPv4 LAN atual do computador e se a porta 3000 está liberada no firewall.${detail}`,
+    );
+  }
+}
+
 export async function authenticateRemoteUser(username: string, password: string): Promise<string> {
-  const response = await fetch(`${BASE_URL}/auth/login`, {
+  const response = await fetchRemote(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
@@ -71,7 +82,7 @@ export async function authenticateRemoteUser(username: string, password: string)
 }
 
 export async function fetchDisciplinasRemotas(token: string): Promise<Discipline[]> {
-  const response = await fetch(`${BASE_URL}/disciplinas`, {
+  const response = await fetchRemote(`${BASE_URL}/disciplinas`, {
     headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
   });
 

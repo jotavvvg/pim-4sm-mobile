@@ -94,10 +94,10 @@ O app mobile inicia com SQLite local e dados de demonstração. O backend não �
 Configure `pim-4sm-panel\mobile\.env` antes de iniciar o Expo ou gerar um build. Use o endereço do computador que executa o backend:
 
 ```env
-EXPO_PUBLIC_API_BASE_URL=http://192.168.0.10:3000/api
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.2:3000/api
 ```
 
-O arquivo `.env.example` contém esse IP apenas como exemplo. Para Android Emulator use `http://10.0.2.2:3000/api`; para um aparelho físico, use o IP LAN do computador, mantenha ambos na mesma rede e permita acesso à porta `3000` no firewall. Se o backend estiver em Docker, publique a porta do host (`3000:3000`) além de iniciar o Fastify na interface `0.0.0.0`. O app permite tráfego HTTP para suportar esse servidor local; em produção, prefira HTTPS.
+O `192.168.1.2` corresponde ao IPv4 LAN atual do computador de desenvolvimento e pode mudar; confira-o com `ipconfig` antes de gerar o APK. Para Android Emulator use `http://10.0.2.2:3000/api`; para um aparelho físico, use o IPv4 LAN do computador, mantenha ambos na mesma rede e permita acesso à porta `3000` no firewall. Se o backend estiver em Docker, publique a porta do host (`3000:3000`) além de iniciar o Fastify na interface `0.0.0.0`. O app permite tráfego HTTP para suportar esse servidor local; em produção, prefira HTTPS. A URL é incorporada ao bundle: alterá-la exige gerar e instalar um novo APK.
 
 No dashboard do Administrador, **Sincronizar Dados** solicita as credenciais de uma conta do backend, autentica em `POST /api/auth/login` e usa o JWT recebido apenas durante a operação para consultar `GET /api/disciplinas`. Essa conta é independente do login local do SQLite; use as credenciais cadastradas no backend. Os IDs remotos são guardados separadamente dos IDs locais: na primeira sincronização, disciplinas locais com o mesmo nome são vinculadas aos IDs remotos, preservando relações existentes; novos registros recebem IDs locais. Sincronizações seguintes atualizam os registros vinculados dentro de uma transação SQLite. O fluxo não apaga disciplinas locais que não estejam na resposta remota nem modifica relações existentes, e não usa `INSERT OR REPLACE`, que apagaria/recriaria linhas e poderia disparar regras de chaves estrangeiras.
 
