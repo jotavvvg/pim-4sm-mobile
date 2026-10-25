@@ -23,6 +23,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "./plugins/withLocalCleartextTraffic",
       "expo-secure-store",
       "expo-status-bar",
       "expo-sqlite"

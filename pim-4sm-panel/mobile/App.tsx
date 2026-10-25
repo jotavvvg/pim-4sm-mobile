@@ -4,10 +4,11 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal as NativeModal, P
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Activity as ActivityIcon, ArrowLeft, ArrowRight, Check, CheckCheck, ChevronDown, ChevronUp, CircleDashed, CirclePlus, ClipboardList, Eye, FileText, ListChecks, Pencil, Plus, Search, Send, Trash2, X } from 'lucide-react-native';
+import { Activity as ActivityIcon, ArrowLeft, ArrowRight, Check, CheckCheck, ChevronDown, ChevronUp, CircleDashed, CirclePlus, ClipboardList, Eye, FileText, ListChecks, Pencil, Plus, RefreshCw, Search, Send, Trash2, X } from 'lucide-react-native';
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
-import { all, authenticate, initializeDatabase, profile, run, type Activity, type Discipline, type LocalSession, type Professor, type Question, type SchoolClass, type Student, type Submission } from './src/db';
+import { all, authenticate, initializeDatabase, profile, run, sincronizarDisciplinasLocal, type Activity, type Discipline, type LocalSession, type Professor, type Question, type SchoolClass, type Student, type Submission } from './src/db';
 import { NativeDataTable } from './src/components/NativeDataTable';
+import { authenticateRemoteUser, fetchDisciplinasRemotas } from './src/api';
 
 const SESSION = 'pim-session';
 const labels = { ADMIN: 'Administrador', PROFESSOR: 'Professor', ALUNO: 'Aluno' } as const;
@@ -60,8 +61,94 @@ function Home({session,go,refresh}:{session:LocalSession;go:(x:Screen)=>void;ref
   const [polarData,setPolarData]=useState<Array<{label:string;value:number}>>([]);
   const [classPerformance,setClassPerformance]=useState<Array<{label:string;value:number}>>([]);
   const [overallAverage,setOverallAverage]=useState<number|null>(null);
-  useEffect(()=>{Promise.all(['disciplinas','turmas','professores','alunos','atividades'].map(async table=>[table,(await all<{n:number}>(`SELECT COUNT(*) n FROM ${table}`))[0]?.n||0])).then(values=>setCounts(Object.fromEntries(values)));const performanceQuery=session.role==='PROFESSOR'?'SELECT al.nome label, COALESCE(AVG(e.nota),0) value FROM entregas e JOIN alunos al ON al.id=e.aluno_id JOIN atividades at ON at.id=e.atividade_id JOIN professores p ON p.disciplina_id=at.disciplina_id WHERE p.usuario_id=? AND e.nota IS NOT NULL GROUP BY al.id,al.nome ORDER BY al.nome':'SELECT d.nome label, COALESCE(AVG(e.nota),0) value FROM entregas e JOIN atividades at ON at.id=e.atividade_id JOIN disciplinas d ON d.id=at.disciplina_id JOIN alunos al ON al.id=e.aluno_id WHERE al.usuario_id=? AND e.nota IS NOT NULL GROUP BY d.id,d.nome ORDER BY d.nome';const classQuery='SELECT t.nome label, COALESCE(AVG(e.nota),0) value FROM entregas e JOIN alunos al ON al.id=e.aluno_id JOIN turmas t ON t.id=al.turma_id JOIN atividades at ON at.id=e.atividade_id JOIN professores p ON p.disciplina_id=at.disciplina_id WHERE p.usuario_id=? AND e.nota IS NOT NULL GROUP BY t.id,t.nome';const averageQuery=session.role==='PROFESSOR'?'SELECT AVG(e.nota) value FROM entregas e JOIN atividades at ON at.id=e.atividade_id JOIN professores p ON p.disciplina_id=at.disciplina_id WHERE p.usuario_id=? AND e.nota IS NOT NULL':'SELECT AVG(e.nota) value FROM entregas e JOIN alunos al ON al.id=e.aluno_id WHERE al.usuario_id=? AND e.nota IS NOT NULL';Promise.all([all<{turma:string;count:number}>('SELECT t.nome turma, COUNT(a.id) count FROM turmas t LEFT JOIN alunos a ON a.turma_id=t.id GROUP BY t.id,t.nome ORDER BY t.nome'),all<{nome:string;horas:number}>('SELECT nome, carga_hora horas FROM disciplinas ORDER BY nome'),all<{label:string;value:number}>(performanceQuery,session.userId),all<{label:string;value:number}>(classQuery,session.userId),all<{value:number|null}>(averageQuery,session.userId)]).then(([classRows,disciplineRows,performanceRows,classPerformanceRows,averageRows])=>{setClasses(classRows);setDisciplines(disciplineRows);setPolarData(performanceRows);setClassPerformance(classPerformanceRows);setOverallAverage(averageRows[0]?.value===null||averageRows[0]?.value===undefined?null:Number(averageRows[0].value))})},[refresh,session.role,session.userId]);
-  if(session.role==='ADMIN') return <View style={s.pageSection}><PageHeader eyebrow="Visão geral" title="Dashboard acadêmico"/><View style={s.statsGrid}>{[['Total de alunos','alunos','purple'],['Total de professores','professores','blue'],['Total de turmas','turmas','green'],['Total de disciplinas','disciplinas','amber']].map(([label,key,accent])=><StatCard key={key} label={label} value={counts[key]||0} accent={accent}/>)}</View><View style={s.chartGrid}><ChartPanel title="Alunos por turma"><BarChartNative data={classes}/></ChartPanel><ChartPanel title="Carga horária por disciplina"><DonutChart data={disciplines}/></ChartPanel></View></View>;
+  const [syncing,setSyncing]=useState(false);
+  const [syncRevision,setSyncRevision]=useState(0);
+  const [syncDialogOpen,setSyncDialogOpen]=useState(false);
+  const [remoteUsername,setRemoteUsername]=useState(session.username);
+  const [remotePassword,setRemotePassword]=useState('');
+  const [syncError,setSyncError]=useState('');
+  useEffect(()=>{
+    Promise.all(['disciplinas','turmas','professores','alunos','atividades'].map(async table=>[table,(await all<{n:number}>(`SELECT COUNT(*) n FROM ${table}`))[0]?.n||0])).then(values=>setCounts(Object.fromEntries(values)));
+    const performanceQuery=session.role==='PROFESSOR'
+      ?'SELECT al.nome label, COALESCE(AVG(e.nota),0) value FROM entregas e JOIN alunos al ON al.id=e.aluno_id JOIN atividades at ON at.id=e.atividade_id JOIN professores p ON p.disciplina_id=at.disciplina_id WHERE p.usuario_id=? AND e.nota IS NOT NULL GROUP BY al.id,al.nome ORDER BY al.nome'
+      :'SELECT d.nome label, COALESCE(AVG(e.nota),0) value FROM entregas e JOIN atividades at ON at.id=e.atividade_id JOIN disciplinas d ON d.id=at.disciplina_id JOIN alunos al ON al.id=e.aluno_id WHERE al.usuario_id=? AND e.nota IS NOT NULL GROUP BY d.id,d.nome ORDER BY d.nome';
+    const classQuery='SELECT t.nome label, COALESCE(AVG(e.nota),0) value FROM entregas e JOIN alunos al ON al.id=e.aluno_id JOIN turmas t ON t.id=al.turma_id JOIN atividades at ON at.id=e.atividade_id JOIN professores p ON p.disciplina_id=at.disciplina_id WHERE p.usuario_id=? AND e.nota IS NOT NULL GROUP BY t.id,t.nome';
+    const averageQuery=session.role==='PROFESSOR'
+      ?'SELECT AVG(e.nota) value FROM entregas e JOIN atividades at ON at.id=e.atividade_id JOIN professores p ON p.disciplina_id=at.disciplina_id WHERE p.usuario_id=? AND e.nota IS NOT NULL'
+      :'SELECT AVG(e.nota) value FROM entregas e JOIN alunos al ON al.id=e.aluno_id WHERE al.usuario_id=? AND e.nota IS NOT NULL';
+    Promise.all([
+      all<{turma:string;count:number}>('SELECT t.nome turma, COUNT(a.id) count FROM turmas t LEFT JOIN alunos a ON a.turma_id=t.id GROUP BY t.id,t.nome ORDER BY t.nome'),
+      all<{nome:string;horas:number}>('SELECT nome, carga_hora horas FROM disciplinas ORDER BY nome'),
+      all<{label:string;value:number}>(performanceQuery,session.userId),
+      all<{label:string;value:number}>(classQuery,session.userId),
+      all<{value:number|null}>(averageQuery,session.userId),
+    ]).then(([classRows,disciplineRows,performanceRows,classPerformanceRows,averageRows])=>{
+      setClasses(classRows);
+      setDisciplines(disciplineRows);
+      setPolarData(performanceRows);
+      setClassPerformance(classPerformanceRows);
+      setOverallAverage(averageRows[0]?.value===null||averageRows[0]?.value===undefined?null:Number(averageRows[0].value));
+    });
+  },[refresh,session.role,session.userId,syncRevision]);
+  const handleSync=async()=>{
+    setSyncError('');
+    if(!remoteUsername.trim()||!remotePassword){
+      setSyncError('Informe o usuário e a senha da API para sincronizar.');
+      return;
+    }
+    setSyncing(true);
+    try{
+      const token=await authenticateRemoteUser(remoteUsername.trim(),remotePassword);
+      const remoteDisciplines=await fetchDisciplinasRemotas(token);
+      await sincronizarDisciplinasLocal(remoteDisciplines);
+      setSyncRevision(value=>value+1);
+      setSyncDialogOpen(false);
+      setRemotePassword('');
+      const message=`Sincronização concluída. ${remoteDisciplines.length} ${remoteDisciplines.length===1?'disciplina foi sincronizada':'disciplinas foram sincronizadas'}.`;
+      if(Platform.OS==='web'&&typeof window!=='undefined')window.alert(message);
+      else Alert.alert('Sincronização concluída',message);
+    }catch(error){
+      console.error('Failed to synchronize disciplines.',error);
+      const message=error instanceof Error?error.message:'Ocorreu um erro inesperado durante a sincronização.';
+      setSyncError(message);
+      if(Platform.OS==='web'&&typeof window!=='undefined')window.alert(`Falha na sincronização: ${message}`);
+      else Alert.alert('Falha na sincronização',message);
+    }finally{
+      setSyncing(false);
+    }
+  };
+  const closeSyncDialog=()=>{
+    if(syncing)return;
+    setSyncDialogOpen(false);
+    setRemotePassword('');
+    setSyncError('');
+  };
+  if(session.role==='ADMIN') return (
+    <View style={s.pageSection}>
+      <PageHeader eyebrow="Visão geral" title="Dashboard acadêmico" action={<Button title="Sincronizar Dados" icon={<RefreshCw color="#fff" size={15}/>} onPress={()=>{setSyncError('');setSyncDialogOpen(true)}}/>}/>
+      <View style={s.statsGrid}>{[['Total de alunos','alunos','purple'],['Total de professores','professores','blue'],['Total de turmas','turmas','green'],['Total de disciplinas','disciplinas','amber']].map(([label,key,accent])=><StatCard key={key} label={label} value={counts[key]||0} accent={accent}/>)}</View>
+      <View style={s.chartGrid}>
+        <ChartPanel title="Alunos por turma"><BarChartNative data={classes}/></ChartPanel>
+        <ChartPanel title="Carga horária por disciplina"><DonutChart data={disciplines}/></ChartPanel>
+      </View>
+      <ModalCard
+        visible={syncDialogOpen}
+        title="Sincronizar Dados"
+        onClose={closeSyncDialog}
+        footer={
+          <View style={s.modalActions}>
+            <Button title="Cancelar" variant="secondary" compact onPress={closeSyncDialog} disabled={syncing}/>
+            <Button title={syncing?'Sincronizando...':'Sincronizar'} compact onPress={()=>void handleSync()} disabled={syncing}/>
+          </View>
+        }
+      >
+        <Text style={s.muted}>Use as credenciais cadastradas no backend. Elas podem ser diferentes do acesso local; a senha não será salva.</Text>
+        <Input label="Usuário da API" value={remoteUsername} onChangeText={setRemoteUsername} autoCapitalize="none" autoComplete="username"/>
+        <Input label="Senha da API" value={remotePassword} onChangeText={setRemotePassword} secureTextEntry autoComplete="current-password"/>
+        {syncError!==''&&<Text accessibilityRole="alert" style={s.formError}>{syncError}</Text>}
+      </ModalCard>
+    </View>
+  );
   const isProfessor=session.role==='PROFESSOR';
   return <View style={s.pageSection}><PageHeader eyebrow={isProfessor?'Área do professor':'Área do aluno'} title={isProfessor?'Desempenho da disciplina':'Meu Desempenho Geral'}/><View style={s.gradeSummaryRow}><GradeStatCard label={isProfessor?'Turmas avaliadas':'Disciplinas avaliadas'} value={isProfessor?classPerformance.length:polarData.length} accent="purple"/><GradeStatCard label={isProfessor?'Alunos avaliados':'Média geral'} value={isProfessor?polarData.length:(overallAverage===null?'—':overallAverage.toFixed(1))} accent="blue"/>{isProfessor&&<GradeStatCard label="Média geral" value={overallAverage===null?'—':overallAverage.toFixed(1)} accent="green" />}</View>{isProfessor?<View style={s.chartGrid}><ChartPanel title="Desempenho por Turma"><GradePolarPanel labels={classPerformance.map(item=>item.label)} values={classPerformance.map(item=>Number(item.value)||0)} emptyTitle="Sem notas por turma" emptyDescription="As médias aparecerão após as primeiras correções."/></ChartPanel><ChartPanel title="Notas dos Alunos"><GradePolarPanel labels={polarData.map(item=>item.label)} values={polarData.map(item=>Number(item.value)||0)} emptyTitle="Sem notas de alunos" emptyDescription="As médias individuais aparecerão após as primeiras correções."/></ChartPanel></View>:<ChartPanel title="Desempenho por disciplina"><GradePolarPanel labels={polarData.map(item=>item.label)} values={polarData.map(item=>Number(item.value)||0)} emptyTitle="Ainda sem notas" emptyDescription="Suas médias aparecerão aqui quando suas atividades forem corrigidas."/></ChartPanel>}</View>
 }
@@ -605,7 +692,7 @@ function linkedRecordsMessage(entity:'disciplina'|'turma',records:Array<{count:n
   const details=linked.map(record=>`${record.count} ${record.count===1?record.singular:record.plural}`).join(', ');
   return `Não é possível excluir a ${entity}. A exclusão está bloqueada porque ainda existem registros associados: ${details}. Remova ou reassocie esses registros primeiro.`;
 }
-function Button({title,onPress,icon,iconAfter,variant='primary',compact=false,style,textStyle}:{title:string;onPress:()=>void;icon?:React.ReactNode;iconAfter?:React.ReactNode;variant?:'primary'|'secondary';compact?:boolean;style?:StyleProp<ViewStyle>;textStyle?:StyleProp<TextStyle>}){return <Pressable onPress={onPress} style={[s.button,compact&&s.modalActionButton,variant==='secondary'&&s.modalSecondaryButton,style]}><View style={s.buttonContent}>{icon}<Text style={[s.buttonText,textStyle]}>{title}</Text>{iconAfter}</View></Pressable>}
+function Button({title,onPress,icon,iconAfter,variant='primary',compact=false,disabled=false,style,textStyle}:{title:string;onPress:()=>void;icon?:React.ReactNode;iconAfter?:React.ReactNode;variant?:'primary'|'secondary';compact?:boolean;disabled?:boolean;style?:StyleProp<ViewStyle>;textStyle?:StyleProp<TextStyle>}){return <Pressable onPress={onPress} disabled={disabled} accessibilityState={{disabled}} style={[s.button,compact&&s.modalActionButton,variant==='secondary'&&s.modalSecondaryButton,disabled&&s.disabledButton,style]}><View style={s.buttonContent}>{icon}<Text style={[s.buttonText,textStyle]}>{title}</Text>{iconAfter}</View></Pressable>}
 const s=StyleSheet.create({
   safe:{flex:1,backgroundColor:'#0b0f19'},
   center:{flex:1,backgroundColor:'#0b0f19',alignItems:'center',justifyContent:'center'},
@@ -694,6 +781,7 @@ const s=StyleSheet.create({
   inputField:{gap:8},label:{color:'#cbd5e1',fontSize:16,lineHeight:24,fontWeight:'700'},
   input:{backgroundColor:'rgba(15,23,42,0.8)',borderColor:'rgba(148,163,184,0.18)',borderWidth:1,borderRadius:10,color:'#fff',padding:13,fontSize:16},
   button:{backgroundColor:'#8b5cf6',borderRadius:10,padding:15,alignItems:'center',marginVertical:8},
+  disabledButton:{opacity:0.6},
   buttonContent:{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8},
   buttonText:{color:'#fff',fontWeight:'800'},
   section:{color:'#f8fafc',fontSize:18,fontWeight:'800',marginTop:20},

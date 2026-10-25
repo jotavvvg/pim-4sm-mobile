@@ -1,0 +1,58 @@
+name: CI e documentação
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-update-docs:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Instalar o utilitário tree
+        run: sudo apt-get update && sudo apt-get install -y tree
+
+      - name: Gerar árvore de diretórios
+        run: tree -I 'node_modules|.git|dist|build|tree.txt' > tree.txt
+
+      - name: Obter dados do último commit
+        run: |
+          git log -10 --invert-grep \
+            --grep='^docs: atualização automática da árvore de arquivos e changelog$' \
+            --format='- **%cd** - %s (%an)' \
+            --date=short > commit.txt
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Validar backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Validar frontend
+        working-directory: frontend/vite-project
+        run: |
+          npm ci
+          npm run build
+
+      - name: Atualizar README
+        run: node .github/scripts/update-readme.js
+
+      - name: Commitar documentação atualizada
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: atualização automática da árvore de arquivos e changelog"
+          file_pattern: README.md

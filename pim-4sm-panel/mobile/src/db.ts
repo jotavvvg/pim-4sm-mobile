@@ -19,7 +19,7 @@ async function database() {
   if (!dbPromise) dbPromise = SQLite.openDatabaseAsync('pim-local-v3.db').then(async (db) => {
     await db.execAsync(`PRAGMA foreign_keys=ON;
       CREATE TABLE IF NOT EXISTS usuarios(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,role TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS disciplinas(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT NOT NULL,carga_hora INTEGER NOT NULL DEFAULT 40);
+      CREATE TABLE IF NOT EXISTS disciplinas(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT NOT NULL,carga_hora INTEGER NOT NULL DEFAULT 40,remote_id INTEGER UNIQUE);
       CREATE TABLE IF NOT EXISTS turmas(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT UNIQUE NOT NULL);
       CREATE TABLE IF NOT EXISTS professores(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT NOT NULL,disciplina_id INTEGER REFERENCES disciplinas(id),usuario_id INTEGER UNIQUE REFERENCES usuarios(id));
       CREATE TABLE IF NOT EXISTS alunos(id INTEGER PRIMARY KEY AUTOINCREMENT,nome TEXT NOT NULL,matriculado INTEGER DEFAULT 1,turma_id INTEGER REFERENCES turmas(id),usuario_id INTEGER UNIQUE REFERENCES usuarios(id));
@@ -31,6 +31,11 @@ async function database() {
     const questionColumns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(questoes)');
     if (!questionColumns.some(column => column.name === 'tipo')) await db.execAsync("ALTER TABLE questoes ADD COLUMN tipo TEXT NOT NULL DEFAULT 'DISSERTATIVA'");
     if (!questionColumns.some(column => column.name === 'opcoes_json')) await db.execAsync('ALTER TABLE questoes ADD COLUMN opcoes_json TEXT');
+    const disciplineColumns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(disciplinas)');
+    if (!disciplineColumns.some(column => column.name === 'remote_id')) {
+      await db.execAsync('ALTER TABLE disciplinas ADD COLUMN remote_id INTEGER');
+    }
+    await db.execAsync('CREATE UNIQUE INDEX IF NOT EXISTS idx_disciplinas_remote_id ON disciplinas(remote_id)');
     const row = await db.getFirstAsync<{ n: number }>('SELECT COUNT(*) n FROM usuarios');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
     if (version?.user_version !== 5) {
@@ -104,6 +109,50 @@ async function seed(db: SQLite.SQLiteDatabase) {
   });
 }
 export async function initializeDatabase() { await database(); }
+export async function sincronizarDisciplinasLocal(disciplinas: Discipline[]) {
+  const db = await database();
+  await db.withTransactionAsync(async () => {
+    for (const disciplina of disciplinas) {
+      const mapped = await db.getFirstAsync<{ id: number }>(
+        'SELECT id FROM disciplinas WHERE remote_id = ?',
+        disciplina.id,
+      );
+      if (mapped) {
+        await db.runAsync(
+          'UPDATE disciplinas SET nome = ?, carga_hora = ? WHERE id = ?',
+          disciplina.nome,
+          disciplina.carga_hora,
+          mapped.id,
+        );
+        continue;
+      }
+
+      const local = await db.getFirstAsync<{ id: number }>(
+        `SELECT id FROM disciplinas
+         WHERE remote_id IS NULL AND lower(trim(nome)) = lower(trim(?))
+         ORDER BY id
+         LIMIT 1`,
+        disciplina.nome,
+      );
+      if (local) {
+        await db.runAsync(
+          'UPDATE disciplinas SET nome = ?, carga_hora = ?, remote_id = ? WHERE id = ?',
+          disciplina.nome,
+          disciplina.carga_hora,
+          disciplina.id,
+          local.id,
+        );
+      } else {
+        await db.runAsync(
+          'INSERT INTO disciplinas (nome, carga_hora, remote_id) VALUES (?, ?, ?)',
+          disciplina.nome,
+          disciplina.carga_hora,
+          disciplina.id,
+        );
+      }
+    }
+  });
+}
 export async function authenticate(username: string, password: string): Promise<LocalSession> {
   const db = await database(); const row = await db.getFirstAsync<LocalSession>('SELECT id userId,username,role FROM usuarios WHERE username=? AND password_hash=?', username, await hash(password));
   if (!row) throw new Error('Credenciais inválidas'); return row;
