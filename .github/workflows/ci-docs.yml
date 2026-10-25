@@ -32,21 +32,30 @@ jobs:
             --date=short > commit.txt
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Validar backend
-        working-directory: backend
+        working-directory: pim-4sm-panel/backend
         run: |
           npm ci
           npm run build
 
       - name: Validar frontend
-        working-directory: frontend/vite-project
+        working-directory: pim-4sm-panel/frontend/vite-project
         run: |
           npm ci
           npm run build
+          npm run lint
+
+      - name: Validar aplicativo mobile
+        working-directory: pim-4sm-panel/mobile
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npx expo-doctor
+          npx expo config --type public
 
       - name: Atualizar README
         run: node .github/scripts/update-readme.js
