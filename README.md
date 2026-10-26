@@ -11,10 +11,146 @@ https://expo.dev/accounts/jotavvvg/projects/mobile/builds/b837c787-4802-4c6f-b3b
 
 ### Estrutura do Projeto
 <!-- START_TREE -->
+```text
+.
+├── README.md
+├── package-lock.json
+└── pim-4sm-panel
+    ├── backend
+    │   ├── drizzle
+    │   │   ├── 0000_next_warhawk.sql
+    │   │   ├── 0001_bored_amazoness.sql
+    │   │   └── meta
+    │   │       ├── 0000_snapshot.json
+    │   │       ├── 0001_snapshot.json
+    │   │       └── _journal.json
+    │   ├── drizzle.config.ts
+    │   ├── package-lock.json
+    │   ├── package.json
+    │   ├── scripts
+    │   │   ├── migrateActivities.ts
+    │   │   └── seed.ts
+    │   ├── src
+    │   │   ├── db
+    │   │   │   ├── index.ts
+    │   │   │   └── schema.ts
+    │   │   ├── schemas
+    │   │   │   └── index.ts
+    │   │   ├── server.ts
+    │   │   ├── services
+    │   │   │   ├── accounts.ts
+    │   │   │   ├── alunos.ts
+    │   │   │   ├── atividades.ts
+    │   │   │   ├── avaliacoes.ts
+    │   │   │   ├── disciplinas.ts
+    │   │   │   ├── metrics.ts
+    │   │   │   ├── professores.ts
+    │   │   │   ├── search.ts
+    │   │   │   └── turmas.ts
+    │   │   └── types
+    │   │       └── fastify-jwt.d.ts
+    │   └── tsconfig.json
+    ├── frontend
+    │   ├── package-lock.json
+    │   ├── package.json
+    │   └── vite-project
+    │       ├── index.html
+    │       ├── package-lock.json
+    │       ├── package.json
+    │       ├── public
+    │       │   ├── favicon.svg
+    │       │   └── icons.svg
+    │       ├── src
+    │       │   ├── App.css
+    │       │   ├── App.tsx
+    │       │   ├── assets
+    │       │   │   ├── hero.png
+    │       │   │   ├── react.svg
+    │       │   │   └── vite.svg
+    │       │   ├── auth
+    │       │   │   ├── AuthContext.tsx
+    │       │   │   ├── auth-context.ts
+    │       │   │   ├── roles.ts
+    │       │   │   └── useAuth.ts
+    │       │   ├── components
+    │       │   │   ├── AccountCredentialsFields.tsx
+    │       │   │   ├── ActionButton.tsx
+    │       │   │   ├── DataTable.tsx
+    │       │   │   ├── EmptyState.tsx
+    │       │   │   ├── FormField.tsx
+    │       │   │   ├── Layout.tsx
+    │       │   │   ├── Modal.tsx
+    │       │   │   └── ProtectedRoute.tsx
+    │       │   ├── index.css
+    │       │   ├── lib
+    │       │   │   ├── api.ts
+    │       │   │   └── validation.ts
+    │       │   ├── main.tsx
+    │       │   ├── pages
+    │       │   │   ├── ActivitiesListPage.tsx
+    │       │   │   ├── ActivityBuilderPage.tsx
+    │       │   │   ├── ActivityResponsePage.tsx
+    │       │   │   ├── AlunosPage.tsx
+    │       │   │   ├── DashboardPage.tsx
+    │       │   │   ├── DisciplinasPage.tsx
+    │       │   │   ├── LoginPage.tsx
+    │       │   │   ├── PendingEvaluationsPage.tsx
+    │       │   │   ├── ProfessorDisciplinePage.tsx
+    │       │   │   ├── ProfessorStudentsPage.tsx
+    │       │   │   ├── ProfessoresPage.tsx
+    │       │   │   ├── StudentProfilePage.tsx
+    │       │   │   ├── StudentSubjectsPage.tsx
+    │       │   │   └── TurmasPage.tsx
+    │       │   └── types
+    │       │       └── entities.ts
+    │       ├── tsconfig.app.json
+    │       ├── tsconfig.json
+    │       ├── tsconfig.node.json
+    │       └── vite.config.ts
+    └── mobile
+        ├── AGENTS.md
+        ├── App.tsx
+        ├── LICENSE
+        ├── README.md
+        ├── app.json
+        ├── assets
+        │   ├── android-icon-background.png
+        │   ├── android-icon-foreground.png
+        │   ├── android-icon-monochrome.png
+        │   ├── favicon.png
+        │   ├── icon.png
+        │   └── splash-icon.png
+        ├── eas.json
+        ├── index.ts
+        ├── metro.config.js
+        ├── package-lock.json
+        ├── package.json
+        ├── plugins
+        │   └── withLocalCleartextTraffic.js
+        ├── src
+        │   ├── api.ts
+        │   ├── components
+        │   │   ├── NativeActionButton.tsx
+        │   │   └── NativeDataTable.tsx
+        │   ├── db.ts
+        │   └── types.ts
+        └── tsconfig.json
+
+26 directories, 97 files
+```
 <!-- END_TREE -->
 
 ### Histórico Recente de Atualizações
 <!-- START_CHANGELOG -->
+- **2026-10-25** - Link para instalação do app mobile adicionado ao README.MD com últimas atualizações (jotavvvg)
+- **2026-10-25** - sincronização de dados (jotavvvg)
+- **2026-10-25** - atualizações workflow github (jotavvvg)
+- **2026-10-25** - pipeline workflow (jotavvvg)
+- **2026-10-25** - README.md teste (jotavvvg)
+- **2026-10-25** - api fetch/pipeline (jotavvvg)
+- **2026-10-18** - Compilação em app completa (jotavvvg)
+- **2026-10-18** - README.md atualizado (jotavvvg)
+- **2026-10-18** - Compilação completa EXPO e README (jotavvvg)
 <!-- END_CHANGELOG -->
 
 ## Início rápido
