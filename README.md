@@ -6,6 +6,9 @@ O projeto reúne uma versão web responsiva e uma versão mobile em Expo para ap
 
 Os comandos deste documento partem da raiz do repositório, que contém a pasta `pim-4sm-panel`.
 
+### Link para instalação do app mobile
+https://expo.dev/accounts/jotavvvg/projects/mobile/builds/b837c787-4802-4c6f-b3b4-47842c43f34d
+
 ### Estrutura do Projeto
 <!-- START_TREE -->
 <!-- END_TREE -->
